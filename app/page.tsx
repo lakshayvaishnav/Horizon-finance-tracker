@@ -69,7 +69,7 @@ export default function LandingPage() {
                   </p>
                 </div>
                 <div className="flex flex-col gap-2 min-[400px]:flex-row">
-                  <Link href="/login">
+                  <Link href={"/login"}>
                     <Button
                       size="lg"
                       className="bg-blue-600 text-white hover:bg-blue-700"
