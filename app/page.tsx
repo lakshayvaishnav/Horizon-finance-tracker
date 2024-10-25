@@ -1,6 +1,8 @@
+"use client";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import { signIn } from "next-auth/react";
 import {
   Card,
   CardContent,
@@ -69,8 +71,9 @@ export default function LandingPage() {
                   </p>
                 </div>
                 <div className="flex flex-col gap-2 min-[400px]:flex-row">
-                  <Link href={"/login"}>
+                  <Link href={""}>
                     <Button
+                      onClick={() => signIn()}
                       size="lg"
                       className="bg-blue-600 text-white hover:bg-blue-700"
                     >
