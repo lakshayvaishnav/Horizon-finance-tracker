@@ -13,8 +13,19 @@ import {
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
+import { useState } from "react"
+import { error } from "console"
+import { useSession } from "next-auth/react"
 
 export default function AddAccount() {
+  const {data:session} = useSession()
+  const [username , setUsername] = useState("")
+  const [password , setPassword] = useState("")
+  const [cardNumber , setCardNumber] = useState(0)
+  const [bankName , setbankName] = useState("")
+  const [pinCode , setPincode] = useState(0)
+
+
   const form = useForm({
     defaultValues: {
       username: "",
@@ -25,9 +36,23 @@ export default function AddAccount() {
     },
   })
 
-  function onSubmit(data: any) {
-    console.log(data)
+  async function onSubmit() {
     alert("✅ Form submitted successfully!")
+
+    const res = await fetch("http://localhost:3000/api/bank/accounts/create-cards",{
+      method:"POST",
+      headers:{
+        'Content-Type':'application/json'
+      },
+      body:JSON.stringify({userId:session?.user?.id , cardNumber,bankName,pinCode})
+
+    });
+    if(!res.ok){
+      throw new Error("not able to create new card")
+    }
+    const data = await res.json();
+    console.log(data);
+    alert("✅ successfully created the bank account.")
   }
 
   return (
@@ -48,7 +73,7 @@ export default function AddAccount() {
                     <FormItem>
                       <FormLabel>Username</FormLabel>
                       <FormControl>
-                        <Input placeholder="johndoe" {...field} className="w-full" />
+                        <Input placeholder="johndoe" {...field} className="w-full" onChange={(e)=> setUsername(e.target.value)}/>
                       </FormControl>
                       <FormDescription>Your public display name</FormDescription>
                       <FormMessage />
@@ -62,7 +87,7 @@ export default function AddAccount() {
                     <FormItem>
                       <FormLabel>Password</FormLabel>
                       <FormControl>
-                        <Input type="password" placeholder="••••••••" {...field} className="w-full" />
+                        <Input type="password" placeholder="••••••••" {...field} className="w-full" onChange={(e)=>setPassword(e.target.value)} />
                       </FormControl>
                       <FormDescription>Your secure password</FormDescription>
                       <FormMessage />
@@ -76,7 +101,7 @@ export default function AddAccount() {
                     <FormItem>
                       <FormLabel>Card Number</FormLabel>
                       <FormControl>
-                        <Input placeholder="1234 5678 9012 3456" {...field} className="w-full" />
+                        <Input placeholder="1234 5678 9012 3456" {...field} className="w-full" onChange={(e)=> setCardNumber(parseInt(e.target.value))}/>
                       </FormControl>
                       <FormDescription>Your 16-digit card number</FormDescription>
                       <FormMessage />
@@ -90,7 +115,7 @@ export default function AddAccount() {
                     <FormItem>
                       <FormLabel>Bank Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="Your Bank" {...field} className="w-full" />
+                        <Input placeholder="Your Bank" {...field} className="w-full" onChange={(e)=> setbankName(e.target.value)}/>
                       </FormControl>
                       <FormDescription>The name of your bank</FormDescription>
                       <FormMessage />
@@ -104,7 +129,7 @@ export default function AddAccount() {
                     <FormItem>
                       <FormLabel>PIN Code</FormLabel>
                       <FormControl>
-                        <Input type="password" placeholder="••••" {...field} className="w-full" maxLength={4} />
+                        <Input type="password" placeholder="••••" {...field} className="w-full" maxLength={4} onChange={(e)=> setPincode(parseInt(e.target.value))}/>
                       </FormControl>
                       <FormDescription>Your 4-digit PIN</FormDescription>
                       <FormMessage />
