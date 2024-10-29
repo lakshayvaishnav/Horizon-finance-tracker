@@ -1,14 +1,18 @@
 "use client";
 
+import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Eye, EyeOff } from "lucide-react";
 import {
   Form,
   FormControl,
   FormDescription,
+  FormField,
+  FormItem,
   FormLabel,
   FormMessage,
-  FormItem,
-  FormField,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -20,32 +24,45 @@ import {
   CardContent,
   CardFooter,
 } from "@/components/ui/card";
-import { useState } from "react";
-import { error } from "console";
 import { useSession } from "next-auth/react";
 
-export default function AddAccount() {
-  const { data: session } = useSession();
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [cardNumber, setCardNumber] = useState(0);
-  const [bankName, setbankName] = useState("");
-  const [pinCode, setPincode] = useState(0);
+const formSchema = z.object({
+  name: z.string().min(2, { message: "Name must be at least 2 characters." }),
+  password: z
+    .string()
+    .min(8, { message: "Password must be at least 8 characters." }),
+  pincode: z
+    .string()
+    .length(4, { message: "Pincode must be exactly 4 digits." })
+    .regex(/^\d+$/, { message: "Pincode must contain only numbers." }),
+  cardNumber: z
+    .string()
+    .length(16, { message: "Card number must be exactly 16 digits." })
+    .regex(/^\d+$/, { message: "Card number must contain only numbers." }),
+  bankName: z
+    .string()
+    .min(2, { message: "Bank name must be at least 2 characters." }),
+});
 
-  const form = useForm({
+export default function FinanceForm() {
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPincode, setShowPincode] = useState(false);
+  const { data: session } = useSession();
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
-      username: "",
+      name: "",
       password: "",
+      pincode: "",
       cardNumber: "",
       bankName: "",
-      pincode: "",
     },
   });
 
-  async function onSubmit() {
-    alert("✅ Form submitted successfully!");
-
-    const res = await fetch(
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    console.log(values);
+    const response = await fetch(
       "http://localhost:3000/api/bank/accounts/create-cards",
       {
         method: "POST",
@@ -53,145 +70,146 @@ export default function AddAccount() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          // @ts-ignore
           userId: session?.user?.id,
-          cardNumber,
-          bankName,
-          pinCode,
+          cardNumber: values.cardNumber,
+          bankName: values.bankName,
+          pincode: values.pincode,
         }),
       }
     );
-    if (!res.ok) {
-      throw new Error("not able to create new card");
-    }
-    const data = await res.json();
-    console.log(data);
-    alert("✅ successfully created the bank account.");
+    alert("Form submitted successfully!");
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-100 to-blue-200 flex items-center justify-center p-4">
-      <Card className="w-full max-w-2xl shadow-lg">
+      <Card className="w-full max-w-md shadow-lg">
         <CardHeader>
           <CardTitle className="text-2xl font-bold text-center">
-            Add Account
+            Finance Application
           </CardTitle>
           <CardDescription className="text-center">
-            Please fill in your account details
+            Please fill in your financial details
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="username"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Username</FormLabel>
-                      <FormControl>
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="John Doe" {...field} />
+                    </FormControl>
+                    <FormDescription>Your full name</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <div className="relative">
                         <Input
-                          placeholder="johndoe"
-                          {...field}
-                          className="w-full"
-                          onChange={(e) => setUsername(e.target.value)}
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Your public display name
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Password</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="password"
+                          type={showPassword ? "text" : "password"}
                           placeholder="••••••••"
                           {...field}
-                          className="w-full"
-                          onChange={(e) => setPassword(e.target.value)}
                         />
-                      </FormControl>
-                      <FormDescription>Your secure password</FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="cardNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Card Number</FormLabel>
-                      <FormControl>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
+                    </FormControl>
+                    <FormDescription>Your secure password</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="pincode"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Pincode</FormLabel>
+                    <FormControl>
+                      <div className="relative">
                         <Input
-                          placeholder="1234 5678 9012 3456"
-                          {...field}
-                          className="w-full"
-                          onChange={(e) =>
-                            setCardNumber(parseInt(e.target.value))
-                          }
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Your 16-digit card number
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="bankName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Bank Name</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Your Bank"
-                          {...field}
-                          className="w-full"
-                          onChange={(e) => setbankName(e.target.value)}
-                        />
-                      </FormControl>
-                      <FormDescription>The name of your bank</FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="pincode"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>PIN Code</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="password"
+                          type={showPincode ? "text" : "password"}
                           placeholder="••••"
-                          {...field}
-                          className="w-full"
                           maxLength={4}
-                          onChange={(e) => setPincode(parseInt(e.target.value))}
+                          {...field}
                         />
-                      </FormControl>
-                      <FormDescription>Your 4-digit PIN</FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <CardFooter className="flex justify-end px-0">
-                <Button type="submit" className="w-full md:w-auto">
-                  Submit
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                          onClick={() => setShowPincode(!showPincode)}
+                        >
+                          {showPincode ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
+                    </FormControl>
+                    <FormDescription>Your 4-digit PIN</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="cardNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Card Number</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="1234 5678 9012 3456"
+                        maxLength={16}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormDescription>Your 16-digit card number</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="bankName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Bank Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Your Bank" {...field} />
+                    </FormControl>
+                    <FormDescription>The name of your bank</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <CardFooter className="flex justify-end px-0 pt-4">
+                <Button type="submit" className="w-full">
+                  Submit Application
                 </Button>
               </CardFooter>
             </form>

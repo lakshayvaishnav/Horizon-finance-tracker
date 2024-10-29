@@ -1,6 +1,15 @@
 import prisma from "@/lib/prismaClient";
+import { DefaultSession } from "next-auth";
 import NextAuth from "next-auth/next";
 import GoogleProvider from "next-auth/providers/google";
+
+declare module "next-auth" {
+  interface Session {
+    user: {
+      id: string;
+    } & DefaultSession["user"];
+  }
+}
 
 const handler = NextAuth({
   providers: [
