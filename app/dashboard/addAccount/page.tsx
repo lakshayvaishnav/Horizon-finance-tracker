@@ -48,7 +48,7 @@ export default function FinanceForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showPincode, setShowPincode] = useState(false);
   const { data: session } = useSession();
-
+  
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -59,9 +59,9 @@ export default function FinanceForm() {
       bankName: "",
     },
   });
-
+  
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
+    console.log("session : " ,session);
     const response = await fetch(
       "http://localhost:3000/api/bank/accounts/create-cards",
       {
@@ -70,13 +70,16 @@ export default function FinanceForm() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          userId: session?.user?.id,
+          userId: session?.user.id,
           cardNumber: values.cardNumber,
           bankName: values.bankName,
           pincode: values.pincode,
         }),
       }
     );
+
+    const data = await response.json();
+    console.log("data after form submission : ", data);
     alert("Form submitted successfully!");
   }
 
