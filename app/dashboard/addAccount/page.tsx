@@ -73,7 +73,7 @@ export default function FinanceForm() {
           userId: session?.user.id,
           cardNumber: values.cardNumber,
           bankName: values.bankName,
-          pincode: values.pincode,
+          pinCode: values.pincode,
         }),
       }
     );
