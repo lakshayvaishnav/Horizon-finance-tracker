@@ -27,7 +27,7 @@ model Card {
   bankName String
   cardNumber String
   pinCode String
-  userId  Int
+  userId  Int 
   user User @relation(fields: [userId], references: [id])
 }
 
@@ -37,6 +37,6 @@ model Expense {
   description String
   amount Int
   date DateTime
-  userId Int
+  userId Int 
   user User @relation(fields: [userId], references: [id])
 }

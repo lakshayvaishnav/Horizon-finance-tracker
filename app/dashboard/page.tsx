@@ -7,6 +7,8 @@ import { useEffect } from "react";
 
 export default () => {
   const { data, status } = useSession();
+
+  console.log("session details from client side : ", data);
   const router = useRouter();
 
   if (status === "unauthenticated") {
@@ -15,7 +17,9 @@ export default () => {
 
   return (
     <section className="bg-blue-300 flex justify-center items-center h-screen">
-      <h1 className="tracking-tighter font-bold text-2xl">this is the dashbaord </h1>
+      <h1 className="tracking-tighter font-bold text-2xl">
+        this is the dashbaord{" "}
+      </h1>
     </section>
   );
 };
