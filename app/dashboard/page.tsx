@@ -8,7 +8,7 @@ import { useEffect } from "react";
 export default () => {
   const { data, status } = useSession();
 
-  console.log("session details from client side : ", data);
+  console.log("session details from client side : ", JSON.stringify(data));
   const router = useRouter();
 
   if (status === "unauthenticated") {
