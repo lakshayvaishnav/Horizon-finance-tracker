@@ -36,11 +36,9 @@ export default function Home() {
       }
       const data = await response.json();
       setUserDetails(data.user);
-      
+
       setCardDetails(data.cardDetails);
-      
-      
-      console.log(" cardetails :", cardDetails);
+      console.log("card details : ", data.cardDetails);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
@@ -80,16 +78,13 @@ export default function Home() {
         )}
 
         <div className="grid gap-6 md:grid-cols-2 text-white">
-          {cardDetails.map((account) => (
-            <Card  className="bg-gray-800">
-              <CardHeader>
-                <CardTitle>{account.bankName}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p>Card Number: {account.cardNumber}</p>
-                <p>Pincode: ••••</p>
-              </CardContent>
-            </Card>
+          <h1>Details :</h1>
+          {cardDetails.map((card: cardDetails) => (
+            <div>
+              <h3>{card.cardNumber}</h3>
+              <h3>{card.bankName}</h3>
+              <h4>pin ****</h4>
+            </div>
           ))}
         </div>
       </div>

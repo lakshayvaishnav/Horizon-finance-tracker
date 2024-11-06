@@ -13,9 +13,9 @@ export async function GET(req: NextRequest) {
         },
       });
       console.log("user found : ✅ ", user);
-      const cardDetails = await prisma.card.findUnique({
+      const cardDetails = await prisma.card.findMany({
         where: {
-          id: session.user.id,
+          userId: session.user.id,
         },
       });
       console.log("card details found ✅ : ", cardDetails);
