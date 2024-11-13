@@ -16,19 +16,42 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useSession } from "next-auth/react";
 import { Form, useForm } from "react-hook-form";
+import { z } from "zod";
 
 export default function AddExpense() {
+  const {data:session} = useSession()
   const form = useForm({
     defaultValues: {
       name: "",
-      bankName: "",
+      description: "",
       amount: "",
     },
   });
 
-  function submitHandler(values: any) {
-    console.log("submit clicked : ", values);
+  const formschema = z.object({
+    name: z.string(),
+    description: z
+      .string()
+      .min(8, { message: "description must be atleast 8 charachters long" }),
+    amount: z.string(),
+  });
+
+  async function submitHandler(values: z.infer<typeof formschema>) {
+    const data = await fetch("http://localhost:3000/api/bank/expenses", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        userId:session?.user.id,
+        name: values.name,
+        description: values.description,
+        amount: parseInt(values.amount),
+      }),
+    });
   }
 
   return (
@@ -55,10 +78,10 @@ export default function AddExpense() {
             />
           </div>
           <div className="flex items-center gap-4">
-            <label className="w-1/3 text-right">Bank Name:</label>
+            <label className="w-1/3 text-right">Descripton:</label>
             <input
               type="text"
-              {...form.register("bankName")}
+              {...form.register("description")}
               className="border rounded p-2 w-2/3"
             />
           </div>
