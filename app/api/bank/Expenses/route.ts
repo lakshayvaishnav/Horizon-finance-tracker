@@ -5,9 +5,9 @@ import prisma from "@/lib/prismaClient";
 
 async function handler(req: NextRequest) {
   const session = await getServerSession(authOptions);
-  const body = await req.json();
-  const { name, amount, description } = body;
   if (req.method === "POST") {
+    const body = await req.json();
+    const { name, amount, description } = body;
     if (session) {
       const response = await prisma.expense.create({
         data: {
