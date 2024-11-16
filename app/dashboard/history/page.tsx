@@ -18,7 +18,7 @@ import {
   TableCell,
   TableCaption,
 } from "@/components/ui/table";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 interface Transaction {
   id: number;
@@ -94,22 +94,26 @@ export default function TransactionHistory(): React.ReactElement {
       return 0;
     });
 
-    console.log("⚠️ unsorted data : ", data);
-    console.log("✅ sorted data : ", sortedData);
     setData(sortedData);
     setSortConfig({ key, direction });
   };
 
-  async function handleFetch() {
-    const response = await fetch("http://localhost:3000/api/bank/expenses", {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    const data = await response.json();
-    console.log("✅✅ data fetched success : ", data);
-  }
+  useEffect(()=>{
+    async function handleFetch() {
+      const response = await fetch("http://localhost:3000/api/bank/expenses", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      const data = await response.json();
+      console.log("✅✅ data fetched success : ", data.response);
+      setData(data.response)
+    }
+    handleFetch();
+  
+  },[])
+
 
   return (
     <div className="h-screen py-36">

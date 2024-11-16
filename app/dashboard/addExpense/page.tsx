@@ -22,7 +22,7 @@ import { Form, useForm } from "react-hook-form";
 import { z } from "zod";
 
 export default function AddExpense() {
-  const {data:session} = useSession()
+  const { data: session } = useSession();
   const form = useForm({
     defaultValues: {
       name: "",
@@ -46,12 +46,13 @@ export default function AddExpense() {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        userId:session?.user.id,
+        userId: session?.user.id,
         name: values.name,
         description: values.description,
         amount: parseInt(values.amount),
       }),
     });
+    alert("added succesfully.");
   }
 
   return (

@@ -37,7 +37,6 @@ async function handler(req: NextRequest) {
         },
       });
 
-      console.log("response : ", response);
 
       return NextResponse.json({
         response,
