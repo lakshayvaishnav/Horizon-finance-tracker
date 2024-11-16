@@ -1,5 +1,6 @@
 "use client";
 
+import { ArrowDownUp, ArrowUpDown } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -23,7 +24,7 @@ interface Transaction {
   id: number;
   name: string;
   description: string;
-  amount: string;
+  amount: number;
   date: string;
 }
 
@@ -84,6 +85,10 @@ export default function TransactionHistory(): React.ReactElement {
               b.description.localeCompare(a.description)
           : b.description.localeCompare(a.description) -
               a.description.localeCompare(b.description);
+      } else if (key === "name") {
+        return direction === "ascending"
+          ? a.name.localeCompare(b.name) - b.name.localeCompare(a.name)
+          : b.name.localeCompare(a.name) - a.name.localeCompare(b.name);
       }
 
       return 0;
@@ -122,20 +127,39 @@ export default function TransactionHistory(): React.ReactElement {
                   onClick={() => handleSort("date")}
                 >
                   Date
+                  {sortConfig.key === "date" && (
+                    <span className="inline-block ml-2">
+                      <ArrowUpDown size={12} />
+                    </span>
+                  )}
                 </TableHead>
                 <TableHead
                   className="cursor-pointer"
                   onClick={() => handleSort("description")}
                 >
                   Description
+                  {sortConfig.key === "description" && (
+                    <span className="inline-block ml-2">
+                      <ArrowDownUp size={12} />
+                    </span>
+                  )}
                 </TableHead>
                 <TableHead
                   className="cursor-pointer"
                   onClick={() => handleSort("amount")}
                 >
                   Amount
+                  {sortConfig.key === "amount" && (
+                    <span className="inline-block ml-2">
+                      <ArrowUpDown size={12} />
+                    </span>
+                  )}
                 </TableHead>
-                <TableHead>Name</TableHead>
+                <TableHead className="cursor-pointer" onClick={()=> handleSort("name")}>Name
+                  {sortConfig.key === 'name' && (
+                    <span className="ml-2 inline-block"><ArrowDownUp size={12}/> </span>
+                  )}
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
