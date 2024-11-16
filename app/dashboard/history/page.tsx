@@ -1,6 +1,12 @@
 "use client";
 
-import { ArrowDownUp, ArrowUpDown } from "lucide-react";
+import {
+  ArrowDownUp,
+  ArrowUpDown,
+  Delete,
+  DeleteIcon,
+  Trash2,
+} from "lucide-react";
 import {
   Card,
   CardContent,
@@ -98,22 +104,37 @@ export default function TransactionHistory(): React.ReactElement {
     setSortConfig({ key, direction });
   };
 
-  useEffect(()=>{
-    async function handleFetch() {
-      const response = await fetch("http://localhost:3000/api/bank/expenses", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      const data = await response.json();
-      console.log("✅✅ data fetched success : ", data.response);
-      setData(data.response)
-    }
-    handleFetch();
-  
-  },[])
+  async function handleFetch() {
+    const response = await fetch("http://localhost:3000/api/bank/expenses", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    const data = await response.json();
+    console.log("✅✅ data fetched success : ", data.response);
+    setData(data.response);
+  }
 
+  useEffect(() => {
+    handleFetch();
+  }, []);
+
+  async function DeleteExpense(txid: number) {
+    const response = await fetch("http://localhost:3000/api/bank/expenses", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        id: txid,
+      }),
+    });
+
+    const data = await response.json();
+    console.log("fe respone of delete : ", data);
+    handleFetch();
+  }
 
   return (
     <div className="h-screen py-36">
@@ -159,9 +180,15 @@ export default function TransactionHistory(): React.ReactElement {
                     </span>
                   )}
                 </TableHead>
-                <TableHead className="cursor-pointer" onClick={()=> handleSort("name")}>Name
-                  {sortConfig.key === 'name' && (
-                    <span className="ml-2 inline-block"><ArrowDownUp size={12}/> </span>
+                <TableHead
+                  className="cursor-pointer"
+                  onClick={() => handleSort("name")}
+                >
+                  Name
+                  {sortConfig.key === "name" && (
+                    <span className="ml-2 inline-block">
+                      <ArrowDownUp size={12} />{" "}
+                    </span>
                   )}
                 </TableHead>
               </TableRow>
@@ -173,6 +200,14 @@ export default function TransactionHistory(): React.ReactElement {
                   <TableCell>{data.description}</TableCell>
                   <TableCell>{data.amount}</TableCell>
                   <TableCell>{data.name}</TableCell>
+                  <TableCell>
+                    <Trash2
+                      className="cursor-pointer"
+                      onClick={() => DeleteExpense(data.id)}
+                      color="red"
+                      size={14}
+                    />
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

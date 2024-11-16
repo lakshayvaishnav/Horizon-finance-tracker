@@ -37,7 +37,6 @@ async function handler(req: NextRequest) {
         },
       });
 
-
       return NextResponse.json({
         response,
         message: "get response from expenses",
@@ -47,6 +46,35 @@ async function handler(req: NextRequest) {
       return NextResponse.json({ message: "no session found" });
     }
   }
+
+  if (req.method === "DELETE") {
+    if (session) {
+      const body = await req.json();
+      const { id } = body;
+
+      if (!id) {
+        return NextResponse.json({ error: "ID is required" }, { status: 400 });
+      }
+
+      const deleteExpense = await prisma.expense.delete({
+        where: {
+          id: id,
+        },
+      });
+
+      console.log("⚠️ Deleted Expense : ", deleteExpense);
+
+      return NextResponse.json(
+        { message: "Expense deleted successfully" },
+        { status: 200 }
+      );
+    } else {
+      return NextResponse.json(
+        { message: "Invalide session" },
+        { status: 500 }
+      );
+    }
+  }
 }
 
-export { handler as GET, handler as POST };
+export { handler as GET, handler as POST , handler as DELETE};
