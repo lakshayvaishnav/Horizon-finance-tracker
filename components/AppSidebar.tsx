@@ -18,11 +18,7 @@ const items = [
     url: "/dashboard/history",
     icon: Calendar,
   },
-  {
-    title: "Send Money",
-    url: "/dashboard/sendMoney",
-    icon: Search,
-  },
+
   {
     title: "Add Account",
     url: "/dashboard/addAccount",
