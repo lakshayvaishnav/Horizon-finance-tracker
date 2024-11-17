@@ -14,6 +14,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { ChevronRight, DollarSign, PieChart, TrendingUp, Users } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 const GridBackground = () => (
   <div className="absolute inset-0 bg-black">
@@ -34,8 +35,9 @@ const AnimatedButton = ({ children, className, ...props }) => (
 )
 
 export default function LandingPage() {
+  const router = useRouter();
   return (
-    <div className="flex flex-col min-h-screen bg-black text-gray-100 relative overflow-hidden">
+    <div className="flex flex-col min-h-screen bg-black text-gray-100 relative ov erflow-hidden">
       <GridBackground />
       <header className="relative z-10 px-4 lg:px-6 h-14 flex items-center border-b border-gray-800">
         <Link className="flex items-center justify-center" href="#">
@@ -80,11 +82,11 @@ export default function LandingPage() {
               </h1>
               <p className="max-w-[600px] text-gray-400 md:text-xl dark:text-gray-400 mx-auto">
                 Take control of your financial future with our powerful and
-                intuitive finance management application.
+                intuitive finance management application.``
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <AnimatedButton
-                  onClick={() => signIn()}
+                  onClick={() => router.push("/dashboard")}
                   className="bg-indigo-600 text-white hover:bg-indigo-700"
                 >
                   Get Started
