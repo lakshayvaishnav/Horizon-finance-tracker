@@ -1,19 +1,19 @@
 'use client';
 
-import { ArrowDownUp, ArrowUpDown, Delete, DeleteIcon, Loader, Trash2 } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowUpDown, Trash2, AlertCircle, RefreshCcw } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     Table,
     TableHeader,
     TableBody,
-    TableFooter,
     TableHead,
     TableRow,
     TableCell,
-    TableCaption,
 } from '@/components/ui/table';
-import React, { useEffect, useState } from 'react';
-import { DNA } from 'react-loader-spinner';
+import { Button } from '@/components/ui/button';
+
 interface Transaction {
     id: number;
     name: string;
@@ -22,157 +22,174 @@ interface Transaction {
     date: string;
 }
 
+type SortKey = keyof Transaction;
+
 export default function TransactionHistory(): React.ReactElement {
-    const [data, setData] = useState<Transaction[]>();
-    const [loading, setLoading] = useState(false);
-    const [sortConfig, setSortConfig] = useState({
-        key: ' ',
-        direction: 'ascending',
+    const [data, setData] = useState<Transaction[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: 'ascending' | 'descending' }>({
+        key: 'date',
+        direction: 'descending',
     });
 
-    const handleSort = (key: keyof Transaction) => {
-        let direction = 'ascending';
-
-        if (sortConfig.key === key && sortConfig.direction === 'ascending') {
-            direction = 'descending';
-        }
-
-        // @ts-ignore
-        const sortedData = [...data].sort((a, b) => {
-            if (key === 'date') {
-                return direction === 'ascending'
-                    ? new Date(a.date).getTime() - new Date(b.date).getTime()
-                    : new Date(b.date).getTime() - new Date(a.date).getTime();
-            } else if (key === 'amount') {
-                return direction === 'ascending' ? a.amount - b.amount : b.amount - a.amount;
-            } else if (key === 'description') {
-                return direction === 'ascending'
-                    ? a.description.localeCompare(b.description) - b.description.localeCompare(a.description)
-                    : b.description.localeCompare(a.description) - a.description.localeCompare(b.description);
-            } else if (key === 'name') {
-                return direction === 'ascending'
-                    ? a.name.localeCompare(b.name) - b.name.localeCompare(a.name)
-                    : b.name.localeCompare(a.name) - a.name.localeCompare(b.name);
-            }
-
-            return 0;
-        });
-
-        setData(sortedData);
-        setSortConfig({ key, direction });
+    const handleSort = (key: SortKey) => {
+        setSortConfig((prevConfig) => ({
+            key,
+            direction:
+                prevConfig.key === key && prevConfig.direction === 'ascending' ? 'descending' : 'ascending',
+        }));
     };
 
-    async function handleFetch() {
-        setLoading(true);
-        const response = await fetch('http://localhost:3000/api/bank/expenses', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+    const sortedData = React.useMemo(() => {
+        if (!data) return [];
+        return [...data].sort((a, b) => {
+            if (a[sortConfig.key] < b[sortConfig.key]) {
+                return sortConfig.direction === 'ascending' ? -1 : 1;
+            }
+            if (a[sortConfig.key] > b[sortConfig.key]) {
+                return sortConfig.direction === 'ascending' ? 1 : -1;
+            }
+            return 0;
         });
-        const data = await response.json();
-        console.log('✅✅ data fetched success : ', data.response);
-        setData(data.response);
-        setLoading(false);
+    }, [data, sortConfig]);
+
+    async function fetchTransactions() {
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await fetch('http://localhost:3000/api/bank/expenses', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+            if (!response.ok) {
+                throw new Error('Failed to fetch transactions');
+            }
+            const result = await response.json();
+            setData(result.response);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'An error occurred while fetching transactions');
+        } finally {
+            setLoading(false);
+        }
     }
 
     useEffect(() => {
-        handleFetch();
+        fetchTransactions();
     }, []);
 
-    async function DeleteExpense(txid: number) {
-        const response = await fetch('http://localhost:3000/api/bank/expenses', {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                id: txid,
-            }),
-        });
-
-        const data = await response.json();
-        console.log('fe respone of delete : ', data);
-        handleFetch();
+    async function deleteExpense(txid: number) {
+        try {
+            const response = await fetch('http://localhost:3000/api/bank/expenses', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    id: txid,
+                }),
+            });
+            if (!response.ok) {
+                throw new Error('Failed to delete expense');
+            }
+            await fetchTransactions();
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'An error occurred while deleting the expense');
+        }
     }
 
     return (
-        <div className="h-screen py-36">
-            <Card>
+        <div className="min-h-screen  bg-black w-screen text-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+            <Card className="bg-gray-900 border-gray-800    ml-[300px]">
                 <CardHeader>
-                    <CardTitle>Transaction History</CardTitle>
-                    <CardDescription>View your transaction history baby...</CardDescription>
-
-                    {data ? (
+                    <CardTitle className="text-2xl font-bold text-gray-100">Transaction History</CardTitle>
+                    <CardDescription className="text-gray-400">View and manage your transactions</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {error && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="mb-4 p-2 bg-red-900 text-red-100 rounded-md flex items-center"
+                        >
+                            <AlertCircle className="mr-2" size={16} />
+                            {error}
+                        </motion.div>
+                    )}
+                    <div className="overflow-x-auto">
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead className="cursor-pointer" onClick={() => handleSort('date')}>
-                                        Date
-                                        {sortConfig.key === 'date' && (
-                                            <span className="inline-block ml-2">
-                                                <ArrowUpDown size={12} />
-                                            </span>
-                                        )}
-                                    </TableHead>
-                                    <TableHead className="cursor-pointer" onClick={() => handleSort('description')}>
-                                        Description
-                                        {sortConfig.key === 'description' && (
-                                            <span className="inline-block ml-2">
-                                                <ArrowDownUp size={12} />
-                                            </span>
-                                        )}
-                                    </TableHead>
-                                    <TableHead className="cursor-pointer" onClick={() => handleSort('amount')}>
-                                        Amount
-                                        {sortConfig.key === 'amount' && (
-                                            <span className="inline-block ml-2">
-                                                <ArrowUpDown size={12} />
-                                            </span>
-                                        )}
-                                    </TableHead>
-                                    <TableHead className="cursor-pointer" onClick={() => handleSort('name')}>
-                                        Name
-                                        {sortConfig.key === 'name' && (
-                                            <span className="ml-2 inline-block">
-                                                <ArrowDownUp size={12} />{' '}
-                                            </span>
-                                        )}
-                                    </TableHead>
+                                    {(['date', 'name', 'description', 'amount'] as const).map((key) => (
+                                        <TableHead
+                                            key={key}
+                                            className="cursor-pointer hover:bg-gray-800 transition-colors"
+                                            onClick={() => handleSort(key)}
+                                        >
+                                            <div className="flex items-center">
+                                                {key.charAt(0).toUpperCase() + key.slice(1)}
+                                                <ArrowUpDown
+                                                    size={14}
+                                                    className={`ml-2 ${
+                                                        sortConfig.key === key ? 'opacity-100' : 'opacity-50'
+                                                    }`}
+                                                />
+                                            </div>
+                                        </TableHead>
+                                    ))}
+                                    <TableHead>Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {data!.map((data) => (
-                                    <TableRow key={data.id}>
-                                        <TableCell>{data.date.split('T')[0]}</TableCell>
-                                        <TableCell>{data.description}</TableCell>
-                                        <TableCell>{data.amount}</TableCell>
-                                        <TableCell>{data.name}</TableCell>
-                                        <TableCell>
-                                            <Trash2
-                                                className="cursor-pointer"
-                                                onClick={() => DeleteExpense(data.id)}
-                                                color="red"
-                                                size={14}
-                                            />
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
+                                <AnimatePresence>
+                                    {sortedData.map((transaction) => (
+                                        <motion.tr
+                                            key={transaction.id}
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            exit={{ opacity: 0 }}
+                                            transition={{ duration: 0.2 }}
+                                        >
+                                            <TableCell>{new Date(transaction.date).toLocaleDateString()}</TableCell>
+                                            <TableCell>{transaction.name}</TableCell>
+                                            <TableCell>{transaction.description}</TableCell>
+                                            <TableCell
+                                                className={transaction.amount < 0 ? 'text-red-400' : 'text-green-400'}
+                                            >
+                                                ${Math.abs(transaction.amount).toFixed(2)}
+                                            </TableCell>
+                                            <TableCell>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => deleteExpense(transaction.id)}
+                                                    className="hover:bg-red-900 hover:text-red-100 transition-colors"
+                                                >
+                                                    <Trash2 size={16} />
+                                                </Button>
+                                            </TableCell>
+                                        </motion.tr>
+                                    ))}
+                                </AnimatePresence>
                             </TableBody>
                         </Table>
-                    ) : (
-                        <div className="h-full flex items-center justify-center">
-                            <DNA
-                                visible={true}
-                                height="80"
-                                width="80"
-                                ariaLabel="dna-loading"
-                                wrapperStyle={{}}
-                                wrapperClass="dna-wrapper"
-                            />
+                    </div>
+                    {loading && (
+                        <div className="flex justify-center items-center h-32">
+                            <motion.div
+                                animate={{ rotate: 360 }}
+                                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                            >
+                                <RefreshCcw size={24} className="text-gray-400" />
+                            </motion.div>
                         </div>
                     )}
-                </CardHeader>
+                    {!loading && data.length === 0 && (
+                        <p className="text-center text-gray-400 py-4">No transactions found.</p>
+                    )}
+                </CardContent>
             </Card>
         </div>
     );

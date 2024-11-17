@@ -21,6 +21,7 @@ const GridBackground = () => (
   </div>
 )
 
+// @ts-ignore
 const AnimatedButton = ({ children, className, ...props }) => (
   <motion.div
     whileHover={{ scale: 1.05 }}
@@ -40,7 +41,7 @@ export default function LandingPage() {
         <Link className="flex items-center justify-center" href="#">
           <DollarSign className="h-6 w-6 text-indigo-400" />
           <span className="ml-2 text-xl font-bold text-indigo-400">
-            FinanceApp
+            Horizon
           </span>
         </Link>
         <nav className="ml-auto flex gap-4 sm:gap-6">
